@@ -1,232 +1,213 @@
 # ATLAS Agent
 
-**Autonomous DeFi Agent Orchestrator** — AI agents that trade perpetual futures, optimize yield across 5 chains, and bridge assets autonomously. All secured by OWS policy guardrails.
+**Autonomous DeFi Trading Agent** — powered by [nanobot](https://github.com/HKUDS/nanobot) + [OWS](https://openwallet.sh). Trades perpetual futures across 3 DEXes, optimizes yield across 5 chains, bridges assets — all from one encrypted wallet with policy guardrails.
 
 > OWS Hackathon 2026 | Track 02: Agent Spend Governance | Track 04: Multi-Agent Systems
 
-## What is this?
+## How It Works
 
-ATLAS gives AI agents the ability to execute real DeFi strategies across multiple chains and protocols — with policy-enforced spending limits, contract whitelists, and revocable access keys. The agent holds an OWS wallet, not a raw private key.
-
-```
-perp ows setup
-# => Wallet created, guardrail policy active, agent API key issued.
-# => The agent can now trade on 3 perp DEXes and 5 DeFi chains.
-# => It cannot exceed $1000/tx, $5000/day, or call approve().
-```
-
-## Architecture
+ATLAS is a fully autonomous AI agent that:
+1. **Monitors** funding rates, prices, and yields across exchanges
+2. **Analyzes** arbitrage opportunities and risk/reward
+3. **Executes** trades via OWS-secured signing (agent never sees raw keys)
+4. **Respects** policy guardrails — max $1000/tx, $5000/day, approve() blocked
 
 ```
-                    ┌─────────────────────────────────┐
-                    │      AI Agent (Claude Code)      │
-                    │   MCP Server A    MCP Server B   │
-                    └────────┬──────────────┬──────────┘
-                             │              │
-                    ┌────────▼──────┐ ┌─────▼────────┐
-                    │   perp-cli    │ │   defi-cli   │
-                    │ 3 Perp DEXes  │ │ 5 Chain DeFi │
-                    │               │ │              │
-                    │ • Hyperliquid │ │ • DEX Swap   │
-                    │ • Pacifica    │ │ • Lending    │
-                    │ • Lighter     │ │ • LP / Gauge │
-                    │ • Arb Engine  │ │ • Yield Scan │
-                    │ • Bot Engine  │ │ • Bridge     │
-                    └────────┬──────┘ └─────┬────────┘
-                             │              │
-                    ┌────────▼──────────────▼──────────┐
-                    │        OWS Wallet (shared)        │
-                    │                                   │
-                    │  EVM: 0x9A65...FdEe (all EVM)    │
-                    │  SOL: F4VJnv...G11j (Solana)     │
-                    │                                   │
-                    │  ┌─────────────────────────────┐ │
-                    │  │    perp-guardrail (policy)   │ │
-                    │  │                              │ │
-                    │  │  Contract whitelist (DEX)    │ │
-                    │  │  $1000/tx limit              │ │
-                    │  │  $5000/day limit             │ │
-                    │  │  $500/withdrawal limit       │ │
-                    │  │  approve() blocked           │ │
-                    │  └─────────────────────────────┘ │
-                    │                                   │
-                    │  Bridge: CCTP V2 (free USDC)     │
-                    │  Fund: MoonPay (4-chain deposit)  │
-                    │  Pay: x402 (auto USDC payment)    │
-                    └───────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│            nanobot (AI Engine)               │
+│                                             │
+│  System Prompt: ATLAS trading strategy      │
+│  Provider: Claude / GPT / any LLM           │
+│                                             │
+│  ┌─────────────┐    ┌───────────────┐       │
+│  │  perp-mcp   │    │   ows mcp     │       │
+│  │  (MCP)      │    │   (MCP)       │       │
+│  └──────┬──────┘    └───────┬───────┘       │
+└─────────┼───────────────────┼───────────────┘
+          │                   │
+  ┌───────▼───────┐   ┌──────▼──────┐
+  │   perp-cli    │   │    OWS      │
+  │               │   │             │
+  │ • Hyperliquid │   │ • Wallet    │
+  │ • Pacifica    │   │ • Signing   │
+  │ • Lighter     │   │ • Policy    │
+  │ • Arb Engine  │   │ • Guardrail │
+  │ • 19 Bots     │   │ • MoonPay   │
+  └───────┬───────┘   │ • x402      │
+          │           └──────┬──────┘
+          └────────┬─────────┘
+                   │
+          ┌────────▼────────┐
+          │   OWS Wallet    │
+          │  (AES-256-GCM)  │
+          │                 │
+          │  EVM + Solana   │
+          │  Policy Engine  │
+          │  perp-guardrail │
+          └─────────────────┘
 ```
-
-## Features
-
-### Agent Spend Governance (Track 02)
-
-| Feature | Description |
-|---------|-------------|
-| **Policy Guardrail** | Custom OWS executable that whitelists DEX contracts, enforces per-tx/daily USD limits, blocks dangerous functions |
-| **Scoped API Keys** | Each agent gets its own `ows_key_...` token with specific wallet + policy bindings |
-| **One-Click Setup** | `perp ows setup` creates wallet + policy + API key in one command |
-| **Revocable Access** | `perp ows key revoke` instantly kills agent access |
-| **Multi-Account** | Multiple OWS wallets, switch with `perp wallet use` or `--ows` per-command |
-
-### Multi-Agent DeFi (Track 04)
-
-| Feature | Description |
-|---------|-------------|
-| **3 Perp DEXes** | Hyperliquid, Pacifica, Lighter — funding rate arb, delta-neutral, grid, DCA |
-| **5 Chain DeFi** | DEX swap, lending, LP positions, yield scanning across Base, Arbitrum, BNB, Polygon, Ethereum |
-| **Cross-Chain Bridge** | Circle CCTP V2 — free USDC bridging between Solana, Arbitrum, Base, HyperCore |
-| **MoonPay On-Ramp** | 4-chain deposit addresses, auto-convert to USDC |
-| **x402 Payments** | Auto USDC micropayments for data services |
-| **19 Bot Strategies** | TWAP, VWAP, grid, DCA, momentum, mean-reversion, delta-neutral, and more |
 
 ## Quick Start
 
 ```bash
-# 1. Install
-npm install -g perp-cli @hypurrquant/defi-cli
-curl -fsSL https://docs.openwallet.sh/install.sh | bash
+# 1. Install dependencies
+pip install nanobot-ai                          # AI agent engine
+npm install -g perp-cli                         # perp trading CLI (v0.11.0+)
+curl -fsSL https://docs.openwallet.sh/install.sh | bash  # OWS wallet
 
-# 2. One-click setup (wallet + guardrail + agent key)
+# 2. Setup OWS wallet + guardrail + agent key
 perp ows setup
-# => Wallet: perp-trading (EVM + Solana)
-# => Policy: perp-guardrail ($1000/tx, $5000/day, approve blocked)
-# => Agent Token: ows_key_a1b2c3... (save this!)
 
-# 3. Fund the wallet
-perp ows fund deposit perp-trading --for hl    # Arbitrum USDC
-perp ows fund deposit perp-trading --for pac   # Solana USDC
+# 3. Set your LLM API key
+export ANTHROPIC_API_KEY=sk-ant-...
 
-# 4. Agent trades (policy enforced)
-perp --ows perp-trading --ows-key ows_key_a1b2c3 -e hl trade buy ETH 0.1
-
-# 5. Owner trades (no limits)
-perp --ows perp-trading -e hl trade buy ETH 10.0
+# 4. Launch ATLAS
+./start.sh
 ```
 
-## Demo: Agent Spend Governance
+## What ATLAS Does
 
-```bash
-# Setup with conservative limits
-perp ows setup --name demo --max-tx-usd 100 --max-daily-usd 500
+### Autonomous Trading Loop
 
-# Agent tries small trade => ALLOWED
-perp --ows demo --ows-key $TOKEN -e hl trade buy ETH 0.01
-
-# Agent tries large trade => BLOCKED by guardrail
-perp --ows demo --ows-key $TOKEN -e hl trade buy ETH 10.0
-# => POLICY_DENIED: tx value exceeds limit $100
-
-# Agent tries approve() => BLOCKED
-# => POLICY_DENIED: function approve is blocked by policy
-
-# Owner revokes agent access
-perp ows key revoke $KEY_ID
-# => Token is permanently useless
+```
+Every cycle:
+  1. perp arb scan           → Find funding rate spreads
+  2. perp account balance    → Check available capital
+  3. Evaluate risk/reward    → AI decides strategy
+  4. perp trade buy/sell     → Execute (OWS signs, guardrail validates)
+  5. perp account positions  → Verify execution
+  6. Report P&L              → Log results
 ```
 
-## Demo: Cross-Chain Arbitrage Agent
+### Real Example
 
-```bash
-# Scan funding rates across 3 DEXes
-perp arb scan
+```
+ATLAS: Scanning funding rates...
 
-# Agent finds: HL ETH funding +0.05%, Pacifica ETH funding -0.02%
-# Strategy: Long on Pacifica, Short on Hyperliquid => collect spread
-
-# Execute with policy limits
-perp --ows-key $TOKEN -e hl trade sell ETH 0.1
-perp --ows-key $TOKEN -e pac trade buy ETH 0.1
-
-# Bridge USDC between exchanges (free via CCTP V2)
-perp bridge sol-to-arb 50
+  ETH funding: Hyperliquid +0.042%, Pacifica -0.018%
+  Spread: 0.060% (annualized 21.9%)
+  
+  Action: Short 0.05 ETH on HL, Long 0.05 ETH on Pacifica
+  
+  Executing:
+  > perp --ows main -e hl trade sell ETH 0.05
+  > perp --ows main-sol -e pac trade buy ETH 0.05
+  
+  [OWS] Policy check: ALLOW (tx value $175 < limit $1000)
+  
+  Result: Positions opened. Collecting funding spread.
 ```
 
-## Demo: Yield Optimization (perp-cli + defi-cli)
+## Agent Spend Governance (Track 02)
 
-```bash
-# Scan yields across 5 chains
-defi yield scan
+ATLAS demonstrates how to give an AI agent real financial autonomy with safety:
 
-# Found: Base WETH/USDC LP at 58% APR
-# Hedge: Short ETH on Hyperliquid to go delta-neutral
+| Layer | What It Does |
+|-------|-------------|
+| **OWS Wallet** | Agent holds encrypted wallet, never sees raw keys |
+| **API Key** | Scoped `ows_key_...` token — revocable, per-wallet |
+| **perp-guardrail** | Custom policy executable validates every signature |
+| **Policy Config** | $1000/tx, $5000/day, approve() blocked, DEX contracts only |
+| **Kill Switch** | `perp ows key revoke` → instant access termination |
 
-defi --ows demo -c base lp add WETH/USDC 500     # LP on Base
-perp --ows demo -e hl trade sell ETH 0.15         # Hedge on HL
+### Guardrail in Action
 
-# Net: ~58% APR yield, delta-neutral
-# Guardrail ensures max exposure $1000
+```
+Agent tries $5000 trade     → DENIED: tx value exceeds limit $1000
+Agent tries approve()       → DENIED: function approve is blocked
+Agent tries unknown contract → DENIED: contract not whitelisted
+Agent tries $500 trade      → ALLOWED → OWS signs → exchange executes
 ```
 
-## Guardrail Policy
+## Multi-Agent Systems (Track 04)
+
+ATLAS coordinates across multiple execution domains:
+
+| Agent Domain | Tool | Chain |
+|-------------|------|-------|
+| Perp Trading | perp-cli | Arbitrum, Solana, ETH L2 |
+| DeFi Yield | defi-cli | Base, Arbitrum, BNB, Polygon, ETH |
+| Bridging | CCTP V2 | Cross-chain (free USDC) |
+| Funding | MoonPay | 4-chain auto-convert deposit |
+| Data | x402 | Pay-per-call market intelligence |
+
+## Configuration
+
+### config.json
 
 ```json
 {
-  "id": "perp-guardrail",
-  "executable": "perp-guardrail",
-  "config": {
-    "max_tx_usd": 1000,
-    "max_daily_usd": 5000,
-    "max_withdraw_usd": 500,
-    "max_daily_withdraw_usd": 2000,
-    "block_selectors": ["0x095ea7b3", "0x23b872dd"]
+  "agents": {
+    "defaults": {
+      "model": "claude-sonnet-4-20250514",
+      "provider": "anthropic"
+    }
   },
-  "action": "deny"
+  "tools": {
+    "mcpServers": {
+      "perp-cli": {
+        "command": "perp-mcp",
+        "args": []
+      },
+      "ows": {
+        "command": "ows",
+        "args": ["mcp"]
+      }
+    }
+  }
 }
 ```
 
-| Check | Default | Configurable |
-|-------|---------|-------------|
-| Chain whitelist | All perp-cli chains | `--chains` |
-| Contract whitelist | DEX contracts only | `allowed_contracts` |
-| Per-tx limit | $1,000 | `--max-tx-usd` |
-| Daily limit | $5,000 | `--max-daily-usd` |
-| Withdrawal limit | $500/tx, $2,000/day | `--max-withdraw-usd` |
-| Blocked functions | approve(), transferFrom() | `--block-approve` |
-| Policy expiry | None | `--expires` |
+### Policy Presets
+
+| Preset | Per-TX | Daily | Withdraw | approve() |
+|--------|--------|-------|----------|-----------|
+| `conservative.json` | $500 | $2,000 | $200 | Blocked |
+| `aggressive.json` | $5,000 | $20,000 | $2,000 | Blocked |
+
+```bash
+# Apply a policy preset
+ows policy create --file policies/conservative.json
+```
 
 ## Security Model
 
 ```
-Owner (passphrase)  =>  Full access, no policy checks
-Agent (ows_key_...) =>  Policy evaluated BEFORE key decryption
-                        Denied? Key material NEVER touched.
+Owner (passphrase)  →  Full access, no limits
+ATLAS (ows_key_...) →  Policy-gated: guardrail checks BEFORE key decryption
+                       Denied? Key material NEVER touched.
+                       Revoked? Encrypted copy deleted, token useless.
 ```
 
-- Keys encrypted at rest (AES-256-GCM + scrypt)
-- Agent tokens use HKDF-SHA256 for independent encryption
-- Revoking a key = deleting encrypted copy (token becomes useless)
-- Guardrail: 5-second timeout, fail-closed (deny on error)
+## Repository Structure
 
-## OWS Integration
-
-| OWS Feature | Command | Method |
-|-------------|---------|--------|
-| Wallet CRUD | `perp ows create/list/info/delete` | NAPI |
-| Signing (EVM) | `perp --ows <n> -e hl trade ...` | NAPI |
-| Signing (Solana) | `perp --ows <n> -e pac trade ...` | NAPI |
-| Policy Engine | `perp ows policy create/list/show/delete` | NAPI |
-| Guardrail | `perp-guardrail` executable | stdin/stdout |
-| API Keys | `perp ows key create/list/revoke` | NAPI |
-| Fund Balance | `perp ows fund balance` | RPC |
-| Fund Deposit | `perp ows fund deposit --for hl` | OWS CLI |
-| x402 Payment | `perp ows pay <url>` | OWS CLI |
-| Backup/Restore | `perp ows backup/restore` | OWS CLI |
-| Key Rotation | `perp ows rotate` | OWS CLI |
-| Service Discovery | `perp ows discover` | OWS CLI |
+```
+atlas-agent/
+├── README.md              # This file
+├── config.json            # nanobot + MCP server config
+├── system-prompt.md       # ATLAS agent persona and strategy
+├── start.sh               # Launch script (preflight + nanobot)
+├── setup.sh               # One-click install (OWS + perp-cli + nanobot)
+├── demo.sh                # Demo: balances, guardrail, MoonPay, arb scan
+└── policies/
+    ├── conservative.json  # $500/tx, $2000/day
+    └── aggressive.json    # $5000/tx, $20000/day
+```
 
 ## Links
 
-- **perp-cli**: [github.com/hypurrquant/perp-cli](https://github.com/hypurrquant/perp-cli/tree/feat/ows-v2)
-- **defi-cli**: [github.com/hypurrquant/defi-cli](https://github.com/hypurrquant/defi-cli)
-- **OWS**: [openwallet.sh](https://openwallet.sh)
+- **perp-cli v0.11.0**: [npm](https://npmjs.com/package/perp-cli) | [github](https://github.com/hypurrquant/perp-cli)
+- **defi-cli v0.4.1**: [npm](https://npmjs.com/package/@hypurrquant/defi-cli) | [github](https://github.com/hypurrquant/defi-cli)
+- **nanobot**: [github](https://github.com/HKUDS/nanobot) | [pypi](https://pypi.org/project/nanobot-ai/)
+- **OWS**: [spec](https://openwallet.sh) | [docs](https://docs.openwallet.sh)
 
 ## Built With
 
+- [nanobot](https://github.com/HKUDS/nanobot) — Ultra-lightweight AI agent engine (MCP, cron, channels)
 - [Open Wallet Standard](https://openwallet.sh) — Encrypted wallet + policy engine + agent access
 - [MoonPay](https://moonpay.com) — Fiat on-ramp + multi-chain deposit
 - [x402](https://x402.org) — HTTP micropayments (USDC)
 - [Circle CCTP V2](https://circle.com/cctp) — Free cross-chain USDC bridging
-- [Hyperliquid](https://hyperliquid.xyz), [Pacifica](https://pacifica.fi), [Lighter](https://lighter.xyz)
 
 ## License
 
