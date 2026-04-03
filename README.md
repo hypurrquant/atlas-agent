@@ -83,7 +83,7 @@ perp ows setup
 
 ```bash
 # 1. Install
-npm install -g perp-cli defi-cli
+npm install -g perp-cli @hypurrquant/defi-cli
 curl -fsSL https://docs.openwallet.sh/install.sh | bash
 
 # 2. One-click setup (wallet + guardrail + agent key)
