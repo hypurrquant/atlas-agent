@@ -30,12 +30,23 @@ check nanobot || MISSING=1
 
 if [ "$MISSING" -eq 1 ]; then
   echo ""
-  echo "  Missing dependencies. Install:"
-  echo "    curl -fsSL https://docs.openwallet.sh/install.sh | bash   # OWS"
-  echo "    npm install -g perp-cli                                    # perp-cli"
-  echo "    pip install nanobot-ai                                     # nanobot"
+  echo "  Missing dependencies. Run:"
+  echo "    docker compose up       # Docker (recommended)"
+  echo ""
+  echo "  Or install manually:"
+  echo "    curl -fsSL https://docs.openwallet.sh/install.sh | bash"
+  echo "    npm install -g perp-cli"
+  echo "    pip install nanobot-ai"
   echo ""
   exit 1
+fi
+
+# ── Setup workspace ──
+
+WORKSPACE="$HOME/.atlas-agent"
+if [ ! -f "$WORKSPACE/SOUL.md" ]; then
+  echo "  Setting up workspace..."
+  bash "$SCRIPT_DIR/setup-workspace.sh" "$WORKSPACE"
 fi
 
 # ── Check OWS wallet ──
@@ -49,8 +60,8 @@ if ! perp ows info "$WALLET" &>/dev/null; then
   perp ows setup --name "$WALLET"
 fi
 
-ADDR=$(perp --ows "$WALLET" -e hl --json account balance 2>/dev/null | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.data?.perp?.equity||'0')" 2>/dev/null || echo "0")
-echo "  HL Equity: \$$ADDR"
+EQUITY=$(perp --ows "$WALLET" -e hl --json account balance 2>/dev/null | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));console.log(d.data?.perp?.equity||'0')" 2>/dev/null || echo "0")
+echo "  HL Equity: \$$EQUITY"
 echo ""
 
 # ── Check API key ──
@@ -65,18 +76,15 @@ fi
 # ── Launch nanobot with ATLAS config ──
 
 echo "  Starting ATLAS agent..."
-echo "  Config: $SCRIPT_DIR/config.json"
-echo "  System: $SCRIPT_DIR/system-prompt.md"
 echo ""
 echo "  MCP Servers:"
 echo "    - perp-mcp (perpetual futures: HL, Pacifica, Lighter)"
 echo "    - ows (wallet management, signing, policy)"
 echo ""
-echo "  Type your commands or let ATLAS trade autonomously."
+echo "  Guardrail: \$1000/tx, \$5000/day, approve() blocked"
 echo "  ─────────────────────────────────────────────────"
 echo ""
 
 export PATH="$HOME/.ows/bin:$PATH"
 
-nanobot --config "$SCRIPT_DIR/config.json" \
-  --system-prompt "$SCRIPT_DIR/system-prompt.md"
+nanobot --config "$SCRIPT_DIR/config.json"

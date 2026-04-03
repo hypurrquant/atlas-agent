@@ -47,7 +47,22 @@ ATLAS is a fully autonomous AI agent that:
           └─────────────────┘
 ```
 
-## Quick Start
+## Quick Start (Docker)
+
+```bash
+git clone https://github.com/hypurrquant/atlas-agent
+cd atlas-agent
+
+# Set your API key
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# Launch (builds image with all dependencies)
+docker compose up
+```
+
+Docker mounts `~/.ows` and `~/.perp` from host, so the agent shares your OWS wallet.
+
+## Quick Start (Manual)
 
 ```bash
 # 1. Install dependencies

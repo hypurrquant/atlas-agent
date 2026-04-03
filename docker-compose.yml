@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  atlas:
+    build: .
+    container_name: atlas-agent
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OWS_PASSPHRASE=${OWS_PASSPHRASE:-}
+      - ATLAS_WALLET=${ATLAS_WALLET:-main}
+    volumes:
+      # Mount OWS vault from host (share wallet with host perp-cli)
+      - ~/.ows:/root/.ows
+      # Mount .perp config (env vars, settings)
+      - ~/.perp:/root/.perp
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
