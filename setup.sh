@@ -1,9 +1,9 @@
 #!/bin/bash
-# OWS Agent — One-click setup
+# ATLAS Agent — One-click setup
 set -e
 
 echo ""
-echo "  OWS Agent Setup"
+echo "  ATLAS Agent Setup"
 echo "  ==============="
 echo ""
 

@@ -1,10 +1,10 @@
 #!/bin/bash
-# OWS Agent — Full Demo Flow
+# ATLAS Agent — Full Demo Flow
 set -e
 
 WALLET="${1:-main}"
 echo ""
-echo "  OWS Agent Demo"
+echo "  ATLAS Agent Demo"
 echo "  =============="
 echo "  Wallet: $WALLET"
 echo ""

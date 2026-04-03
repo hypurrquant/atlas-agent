@@ -1,4 +1,4 @@
-# OWS Agent
+# ATLAS Agent
 
 **Autonomous DeFi Agent Orchestrator** — AI agents that trade perpetual futures, optimize yield across 5 chains, and bridge assets autonomously. All secured by OWS policy guardrails.
 
@@ -6,7 +6,7 @@
 
 ## What is this?
 
-OWS Agent gives AI agents the ability to execute real DeFi strategies across multiple chains and protocols — with policy-enforced spending limits, contract whitelists, and revocable access keys. The agent holds an OWS wallet, not a raw private key.
+ATLAS gives AI agents the ability to execute real DeFi strategies across multiple chains and protocols — with policy-enforced spending limits, contract whitelists, and revocable access keys. The agent holds an OWS wallet, not a raw private key.
 
 ```
 perp ows setup
